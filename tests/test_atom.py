@@ -337,3 +337,39 @@ def test_posts_atom_feed_contains_section_entries(
         "Newer post",
         "Older post with <XML> & characters",
     ]
+
+
+@pytest.fixture(scope="module")
+def empty_atom_feed(built_site: Path) -> ET.Element:
+    atom_path = built_site / "empty" / "atom.xml"
+
+    assert atom_path.is_file(), "Hugo did not generate empty/atom.xml"
+
+    source = atom_path.read_text(encoding="utf-8")
+
+    try:
+        return ET.fromstring(source)
+    except ET.ParseError as error:
+        pytest.fail(f"Generated empty/atom.xml is not valid XML: {error}\n\n{source}")
+
+def test_empty_atom_feed_has_required_metadata(
+    empty_atom_feed: ET.Element,
+) -> None:
+    assert (
+        empty_atom_feed.findtext(f"{ATOM}title")
+        == "Empty section"
+    )
+    assert (
+        empty_atom_feed.findtext(f"{ATOM}id")
+        == "https://example.org/empty/"
+    )
+    assert (
+        empty_atom_feed.findtext(f"{ATOM}updated")
+        == "2026-01-07T09:00:00Z"
+    )
+
+
+def test_empty_atom_feed_contains_no_entries(
+    empty_atom_feed: ET.Element,
+) -> None:
+    assert empty_atom_feed.findall(f"{ATOM}entry") == []
