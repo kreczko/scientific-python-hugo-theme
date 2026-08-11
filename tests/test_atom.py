@@ -104,3 +104,28 @@ def test_atom_feed_author_includes_configured_email(
 
     assert author is not None
     assert author.findtext(f"{ATOM}email") == "team@example.org"
+
+
+def find_link(atom_feed: ET.Element, rel: str) -> ET.Element:
+    links = [
+        link for link in atom_feed.findall(f"{ATOM}link") if link.get("rel") == rel
+    ]
+
+    assert len(links) == 1
+    return links[0]
+
+
+def test_atom_feed_has_self_link(atom_feed: ET.Element) -> None:
+    link = find_link(atom_feed, "self")
+
+    assert link.get("href") == "https://example.org/atom.xml"
+    assert link.get("type") == "application/atom+xml"
+
+
+def test_atom_feed_has_alternate_html_link(
+    atom_feed: ET.Element,
+) -> None:
+    link = find_link(atom_feed, "alternate")
+
+    assert link.get("href") == "https://example.org/"
+    assert link.get("type") == "text/html"

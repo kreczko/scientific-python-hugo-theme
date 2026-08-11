@@ -10,5 +10,11 @@
     {{- with site.Params.author.email }}
         <email>{{ . }}</email>
     {{- end }}
-</author>
+    </author>
+    {{- with .OutputFormats.Get "atom" }}
+    <link rel="self" href="{{ .Permalink }}" type="{{ .MediaType.Type }}" />
+    {{- end }}
+    {{- with .OutputFormats.Get "html" }}
+    <link rel="alternate" href="{{ .Permalink }}" type="{{ .MediaType.Type }}" />
+    {{- end }}
 </feed>
