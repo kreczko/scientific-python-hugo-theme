@@ -1,0 +1,14 @@
+[workspace]
+name = "scientific-python-hugo-theme"
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64"]
+
+[dependencies]
+python = ">=3.11"
+pytest = ">=8"
+hugo = "==0.164.0"
+dart-sass = "==1.101.3"
+
+[tasks]
+test = "python -m pytest"
+test-atom = "python -m pytest tests/test_atom.py -v"
