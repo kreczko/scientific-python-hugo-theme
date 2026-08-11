@@ -16,3 +16,7 @@ outputs:
   section:
     - HTML
     - ATOM
+
+services:
+  rss:
+    limit: 2

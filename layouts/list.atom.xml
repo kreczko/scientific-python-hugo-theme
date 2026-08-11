@@ -1,12 +1,19 @@
 {{ printf `<?xml version="1.0" encoding="utf-8"?>` | safeHTML }}
-<feed xmlns="http://www.w3.org/2005/Atom">
+<feed xmlns="http://www.w3.org/2005/Atom" {{- with site.Language.Locale }} xml:lang="{{ . }}"{{ end }}>
     <generator uri="https://gohugo.io/" version="{{ hugo.Version }}">Hugo</generator>
     <title>{{ .Title }}</title>
+    {{- with site.Params.description }}
+    <subtitle>{{ . }}</subtitle>
+    {{- end }}
     <id>{{ .Permalink }}</id>
-    {{- $pages := .RegularPagesRecursive.ByLastmod.Reverse -}}
+    {{- $entries := .RegularPagesRecursive.ByDate.Reverse -}}
+    {{- $limit := site.Config.Services.RSS.Limit -}}
+    {{- if ge $limit 1 -}}
+        {{- $entries = first $limit $entries -}}
+    {{- end -}}
     {{- $updated := .Lastmod -}}
-    {{- if gt (len $pages) 0 -}}
-        {{- $updated = (index $pages 0).Lastmod -}}
+    {{- with $entries.ByLastmod.Reverse -}}
+        {{- $updated = (index . 0).Lastmod -}}
     {{- end }}
     <updated>{{ $updated.Format "2006-01-02T15:04:05Z07:00" }}</updated>
     <author>
@@ -22,7 +29,7 @@
     <link rel="alternate" href="{{ .Permalink }}" type="{{ .MediaType.Type }}" />
     {{- end }}
 
-    {{- range .RegularPagesRecursive.ByDate.Reverse }}
+    {{- range $entries }}
     <entry>
       <title>{{ .Title }}</title>
       <id>{{ .Permalink }}</id>
@@ -31,7 +38,7 @@
       {{- with .OutputFormats.Get "html" }}
       <link rel="alternate" href="{{ .Permalink }}" type="{{ .MediaType.Type }}" />
       {{- end }}
-      <content type="html">{{ printf "%s" .Content }}</content>
+      <content type="html" xml:base="{{ .Permalink }}">{{ printf "%s" .Content }}</content>
       {{- range .GetTerms "tags" }}
       <category term="{{ .LinkTitle }}" scheme="{{ site.Home.Permalink }}tags/" label="{{ .LinkTitle }}" />
       {{- end }}

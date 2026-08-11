@@ -15,6 +15,9 @@ THEMES_DIR = PROJECT_ROOT.parent
 ATOM_NAMESPACE = "http://www.w3.org/2005/Atom"
 ATOM = f"{{{ATOM_NAMESPACE}}}"
 
+XML_NAMESPACE = "http://www.w3.org/XML/1998/namespace"
+XML_LANG = f"{{{XML_NAMESPACE}}}lang"
+
 
 @pytest.fixture(scope="module")
 def built_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
@@ -385,3 +388,38 @@ def test_atom_feed_identifies_hugo_generator(
     assert re.fullmatch(r"\d+\.\d+\.\d+", version), (
         f"Unexpected Hugo version format: {version!r}"
     )
+
+
+def test_atom_feed_declares_language(atom_feed: ET.Element) -> None:
+    # locale differs depending on the environment, so just check that it exists
+    assert atom_feed.get(XML_LANG)
+
+
+def test_atom_feed_contains_description(
+    atom_feed: ET.Element,
+) -> None:
+    assert atom_feed.findtext(f"{ATOM}subtitle") == "A test feed"
+
+
+def test_atom_entry_content_uses_entry_as_base_url(
+    atom_entries: list[ET.Element],
+) -> None:
+    for entry in atom_entries:
+        content = entry.find(f"{ATOM}content")
+
+        assert content is not None
+        assert content.get(
+            "{http://www.w3.org/XML/1998/namespace}base"
+        ) == entry.findtext(f"{ATOM}id")
+
+
+def test_atom_feed_respects_configured_item_limit(
+    built_site: Path,
+    atom_entries: list[ET.Element],
+) -> None:
+    assert (built_site / "posts" / "excluded_older" / "index.html").is_file()
+
+    assert [entry.findtext(f"{ATOM}title") for entry in atom_entries] == [
+        "Newer post",
+        "Older post with <XML> & characters",
+    ]
