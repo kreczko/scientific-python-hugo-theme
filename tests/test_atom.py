@@ -49,7 +49,22 @@ def atom_feed(built_site: Path) -> ET.Element:
 
     assert atom_path.is_file(), "Hugo did not generate atom.xml"
 
-    return ET.parse(atom_path).getroot()
+    source = atom_path.read_text(encoding="utf-8")
+
+    try:
+        return ET.fromstring(source)
+    except ET.ParseError as error:
+        numbered_source = "\n".join(
+            f"{line_number:4}: {line}"
+            for line_number, line in enumerate(
+                source.splitlines(),
+                start=1,
+            )
+        )
+        pytest.fail(
+            f"Generated Atom feed is not valid XML: {error}\n\n"
+            f"{numbered_source}"
+        )
 
 
 # RFC 4287: https://www.rfc-editor.org/info/rfc4287/#section-4
@@ -129,3 +144,60 @@ def test_atom_feed_has_alternate_html_link(
 
     assert link.get("href") == "https://example.org/"
     assert link.get("type") == "text/html"
+
+
+@pytest.fixture(scope="module")
+def atom_entries(atom_feed: ET.Element) -> list[ET.Element]:
+    return atom_feed.findall(f"{ATOM}entry")
+
+
+def test_atom_feed_contains_entries(
+    atom_entries: list[ET.Element],
+) -> None:
+    assert len(atom_entries) == 2
+
+
+def test_atom_entries_are_ordered_by_publication_date(
+    atom_entries: list[ET.Element],
+) -> None:
+    titles = [entry.findtext(f"{ATOM}title") for entry in atom_entries]
+
+    assert titles == [
+        "Newer post",
+        "Older post with <XML> & characters",
+    ]
+
+
+@pytest.mark.parametrize("element_name", ["title", "id", "updated"])
+def test_atom_entries_contain_required_metadata(
+    atom_entries: list[ET.Element],
+    element_name: str,
+) -> None:
+    for entry in atom_entries:
+        elements = entry.findall(f"{ATOM}{element_name}")
+
+        assert len(elements) == 1
+        assert elements[0].text
+
+
+def test_atom_entry_ids_are_canonical_urls(
+    atom_entries: list[ET.Element],
+) -> None:
+    ids = [entry.findtext(f"{ATOM}id") for entry in atom_entries]
+
+    assert ids == [
+        "https://example.org/posts/newer/",
+        "https://example.org/posts/older/",
+    ]
+
+
+def test_atom_entry_dates(atom_entries: list[ET.Element]) -> None:
+    assert [entry.findtext(f"{ATOM}published") for entry in atom_entries] == [
+        "2026-01-03T11:00:00Z",
+        "2026-01-01T10:00:00Z",
+    ]
+
+    assert [entry.findtext(f"{ATOM}updated") for entry in atom_entries] == [
+        "2026-01-03T11:00:00Z",
+        "2026-01-05T12:00:00Z",
+    ]

@@ -20,4 +20,3 @@ outputFormats:
     baseName: atom
     mediaType: application/atom+xml
     noUgly: true
-    isPlainText: true
