@@ -27,6 +27,7 @@
       {{- with .OutputFormats.Get "html" }}
       <link rel="alternate" href="{{ .Permalink }}" type="{{ .MediaType.Type }}" />
       {{- end }}
+      <content type="html">{{ printf "%s" .Content }}</content>
     </entry>
     {{- end }}
 </feed>

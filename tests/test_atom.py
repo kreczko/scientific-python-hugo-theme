@@ -62,8 +62,7 @@ def atom_feed(built_site: Path) -> ET.Element:
             )
         )
         pytest.fail(
-            f"Generated Atom feed is not valid XML: {error}\n\n"
-            f"{numbered_source}"
+            f"Generated Atom feed is not valid XML: {error}\n\n{numbered_source}"
         )
 
 
@@ -201,3 +200,59 @@ def test_atom_entry_dates(atom_entries: list[ET.Element]) -> None:
         "2026-01-03T11:00:00Z",
         "2026-01-05T12:00:00Z",
     ]
+
+
+def test_atom_entries_have_alternate_html_links(
+    atom_entries: list[ET.Element],
+) -> None:
+    expected_urls = [
+        "https://example.org/posts/newer/",
+        "https://example.org/posts/older/",
+    ]
+
+    for entry, expected_url in zip(
+        atom_entries,
+        expected_urls,
+        strict=True,
+    ):
+        links = [
+            link
+            for link in entry.findall(f"{ATOM}link")
+            if link.get("rel") == "alternate"
+        ]
+
+        assert len(links) == 1
+        assert links[0].get("href") == expected_url
+        assert links[0].get("type") == "text/html"
+
+
+def test_atom_entries_contain_html_content(
+    atom_entries: list[ET.Element],
+) -> None:
+    for entry in atom_entries:
+        contents = entry.findall(f"{ATOM}content")
+
+        assert len(contents) == 1
+        assert contents[0].get("type") == "html"
+        assert contents[0].text
+
+
+def test_atom_entry_content_is_encoded_html(
+    atom_entries: list[ET.Element],
+) -> None:
+    for entry in atom_entries:
+        content = entry.find(f"{ATOM}content")
+
+        assert content is not None
+        assert len(content) == 0
+        assert "<p>" in (content.text or "")
+
+
+def test_atom_entry_content_preserves_html(
+    atom_entries: list[ET.Element],
+) -> None:
+    content = atom_entries[1].findtext(f"{ATOM}content")
+
+    assert content is not None
+    assert "<p>" in content
+    assert "</p>" in content
