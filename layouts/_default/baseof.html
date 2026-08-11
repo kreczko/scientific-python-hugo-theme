@@ -6,6 +6,9 @@
     {{ with .Params.canonicalURL -}}
     <link rel="canonical" href="{{ . }}">
     {{- end }}
+    {{- range .AlternativeOutputFormats }}
+    <link rel="{{ .Rel }}" type="{{ .MediaType.Type }}" href="{{ .Permalink }}">
+    {{- end }}
     <title>{{ block "title" . }}{{ .Site.Title }}{{ if not (eq .Site.Title .Title) }} - {{ .Title }}{{end}}{{ end }}</title>
 
     <!-- Render theme css -->

@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 import re
+from html.parser import HTMLParser
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -17,6 +18,26 @@ ATOM = f"{{{ATOM_NAMESPACE}}}"
 
 XML_NAMESPACE = "http://www.w3.org/XML/1998/namespace"
 XML_LANG = f"{{{XML_NAMESPACE}}}lang"
+
+
+class LinkParser(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.links: list[dict[str, str | None]] = []
+
+    def handle_starttag(
+        self,
+        tag: str,
+        attrs: list[tuple[str, str | None]],
+    ) -> None:
+        if tag == "link":
+            self.links.append(dict(attrs))
+
+
+def parse_html_links(path: Path) -> list[dict[str, str | None]]:
+    parser = LinkParser()
+    parser.feed(path.read_text(encoding="utf-8"))
+    return parser.links
 
 
 @pytest.fixture(scope="module")
@@ -423,3 +444,34 @@ def test_atom_feed_respects_configured_item_limit(
         "Newer post",
         "Older post with <XML> & characters",
     ]
+
+
+@pytest.mark.parametrize(
+    ("html_path", "expected_feed_url"),
+    [
+        ("index.html", "https://example.org/atom.xml"),
+        (
+            "posts/index.html",
+            "https://example.org/posts/atom.xml",
+        ),
+        (
+            "empty/index.html",
+            "https://example.org/empty/atom.xml",
+        ),
+    ],
+)
+def test_html_pages_advertise_atom_feed(
+    built_site: Path,
+    html_path: str,
+    expected_feed_url: str,
+) -> None:
+    links = parse_html_links(built_site / html_path)
+
+    atom_links = [
+        link
+        for link in links
+        if link.get("rel") == "alternate" and link.get("type") == "application/atom+xml"
+    ]
+
+    assert len(atom_links) == 1
+    assert atom_links[0].get("href") == expected_feed_url
