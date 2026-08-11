@@ -3,8 +3,8 @@ title: "Older post with <XML> & characters"
 date: 2026-01-01T10:00:00Z
 lastmod: 2026-01-05T12:00:00Z
 tags:
-  - XML
-  - feeds
+  - Python
+  - Scientific computing
 ---
 
 This entry was published first but updated most recently.

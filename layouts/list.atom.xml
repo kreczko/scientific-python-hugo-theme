@@ -28,6 +28,9 @@
       <link rel="alternate" href="{{ .Permalink }}" type="{{ .MediaType.Type }}" />
       {{- end }}
       <content type="html">{{ printf "%s" .Content }}</content>
+      {{- range .GetTerms "tags" }}
+      <category term="{{ .LinkTitle }}" scheme="{{ site.Home.Permalink }}tags/" label="{{ .LinkTitle }}" />
+      {{- end }}
     </entry>
     {{- end }}
 </feed>

@@ -2,7 +2,8 @@
 title: "Newer post"
 date: 2026-01-03T11:00:00Z
 tags:
-  - feeds
+  - Python
+  - Scientific computing
 ---
 
 This entry was published second.

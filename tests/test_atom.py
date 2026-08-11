@@ -256,3 +256,84 @@ def test_atom_entry_content_preserves_html(
     assert content is not None
     assert "<p>" in content
     assert "</p>" in content
+
+
+def entry_by_title(
+    atom_entries: list[ET.Element],
+    title: str,
+) -> ET.Element:
+    matches = [
+        entry for entry in atom_entries if entry.findtext(f"{ATOM}title") == title
+    ]
+
+    assert len(matches) == 1
+    return matches[0]
+
+
+def test_atom_entry_categories(
+    atom_entries: list[ET.Element],
+) -> None:
+    entry = entry_by_title(atom_entries, "Newer post")
+
+    categories = entry.findall(f"{ATOM}category")
+
+    assert [
+        (
+            category.get("term"),
+            category.get("scheme"),
+            category.get("label"),
+        )
+        for category in categories
+    ] == [
+        (
+            "Python",
+            "https://example.org/tags/",
+            "Python",
+        ),
+        (
+            "Scientific Computing",
+            "https://example.org/tags/",
+            "Scientific Computing",
+        ),
+    ]
+
+
+@pytest.fixture(scope="module")
+def posts_atom_feed(built_site: Path) -> ET.Element:
+    atom_path = built_site / "posts" / "atom.xml"
+
+    assert atom_path.is_file(), "Hugo did not generate posts/atom.xml"
+
+    source = atom_path.read_text(encoding="utf-8")
+
+    try:
+        return ET.fromstring(source)
+    except ET.ParseError as error:
+        pytest.fail(f"Generated posts/atom.xml is not valid XML: {error}\n\n{source}")
+
+
+def test_posts_atom_feed_metadata(
+    posts_atom_feed: ET.Element,
+) -> None:
+    assert posts_atom_feed.tag == f"{ATOM}feed"
+    assert posts_atom_feed.findtext(f"{ATOM}title") == "Test Posts"
+    assert posts_atom_feed.findtext(f"{ATOM}id") == "https://example.org/posts/"
+
+    self_link = find_link(posts_atom_feed, "self")
+    assert self_link.get("href") == "https://example.org/posts/atom.xml"
+    assert self_link.get("type") == "application/atom+xml"
+
+    alternate_link = find_link(posts_atom_feed, "alternate")
+    assert alternate_link.get("href") == "https://example.org/posts/"
+    assert alternate_link.get("type") == "text/html"
+
+
+def test_posts_atom_feed_contains_section_entries(
+    posts_atom_feed: ET.Element,
+) -> None:
+    entries = posts_atom_feed.findall(f"{ATOM}entry")
+
+    assert [entry.findtext(f"{ATOM}title") for entry in entries] == [
+        "Newer post",
+        "Older post with <XML> & characters",
+    ]
