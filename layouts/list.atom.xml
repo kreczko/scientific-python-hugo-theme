@@ -5,4 +5,10 @@
     {{- with .RegularPagesRecursive.ByLastmod.Reverse }}
     <updated>{{ (index . 0).Lastmod.Format "2006-01-02T15:04:05Z07:00" }}</updated>
     {{- end }}
+    <author>
+        <name>{{ site.Params.author.name }}</name>
+    {{- with site.Params.author.email }}
+        <email>{{ . }}</email>
+    {{- end }}
+</author>
 </feed>

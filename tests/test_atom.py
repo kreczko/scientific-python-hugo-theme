@@ -52,6 +52,9 @@ def atom_feed(built_site: Path) -> ET.Element:
     return ET.parse(atom_path).getroot()
 
 
+# RFC 4287: https://www.rfc-editor.org/info/rfc4287/#section-4
+
+
 def test_atom_feed_uses_atom_namespace(atom_feed: ET.Element) -> None:
     assert atom_feed.tag == f"{ATOM}feed"
 
@@ -79,3 +82,25 @@ def test_atom_feed_updated_uses_latest_entry_update(
     atom_feed: ET.Element,
 ) -> None:
     assert atom_feed.findtext(f"{ATOM}updated") == "2026-01-05T12:00:00Z"
+
+
+def test_atom_feed_contains_author(atom_feed: ET.Element) -> None:
+    authors = atom_feed.findall(f"{ATOM}author")
+
+    assert len(authors) == 1
+
+
+def test_atom_feed_author_has_name(atom_feed: ET.Element) -> None:
+    author = atom_feed.find(f"{ATOM}author")
+
+    assert author is not None
+    assert author.findtext(f"{ATOM}name") == "Example Team"
+
+
+def test_atom_feed_author_includes_configured_email(
+    atom_feed: ET.Element,
+) -> None:
+    author = atom_feed.find(f"{ATOM}author")
+
+    assert author is not None
+    assert author.findtext(f"{ATOM}email") == "team@example.org"
