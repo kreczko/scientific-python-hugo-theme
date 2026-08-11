@@ -9,3 +9,15 @@ params:
   plausible:
     dataDomain: null
     javaScript: "https://views.scientific-python.org/js/script.js"
+
+mediaTypes:
+  application/atom+xml:
+    suffixes:
+      - xml
+
+outputFormats:
+  atom:
+    baseName: atom
+    mediaType: application/atom+xml
+    noUgly: true
+    isPlainText: true
