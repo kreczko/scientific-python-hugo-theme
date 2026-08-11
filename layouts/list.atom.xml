@@ -17,7 +17,7 @@
     {{- end }}
     <updated>{{ $updated.Format "2006-01-02T15:04:05Z07:00" }}</updated>
     <author>
-        <name>{{ site.Params.author.name }}</name>
+        <name>{{ site.Params.author.name | default site.Title }}</name>
     {{- with site.Params.author.email }}
         <email>{{ . }}</email>
     {{- end }}
