@@ -1,0 +1,18 @@
+baseURL: "https://example.org/"
+languageCode: "en-GB"
+title: "Atom Test Site"
+theme: scientific-python-hugo-theme
+
+params:
+  author:
+    name: "Example Team"
+    email: "team@example.org"
+  description: "A test feed"
+
+outputs:
+  home:
+    - HTML
+    - ATOM
+  section:
+    - HTML
+    - ATOM
