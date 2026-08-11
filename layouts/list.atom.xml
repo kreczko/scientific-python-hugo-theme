@@ -1,5 +1,6 @@
 {{ printf `<?xml version="1.0" encoding="utf-8"?>` | safeHTML }}
 <feed xmlns="http://www.w3.org/2005/Atom">
+    <generator uri="https://gohugo.io/" version="{{ hugo.Version }}">Hugo</generator>
     <title>{{ .Title }}</title>
     <id>{{ .Permalink }}</id>
     {{- $pages := .RegularPagesRecursive.ByLastmod.Reverse -}}

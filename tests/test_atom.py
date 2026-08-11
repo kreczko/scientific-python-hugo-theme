@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import pytest
+import re
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -352,24 +353,35 @@ def empty_atom_feed(built_site: Path) -> ET.Element:
     except ET.ParseError as error:
         pytest.fail(f"Generated empty/atom.xml is not valid XML: {error}\n\n{source}")
 
+
 def test_empty_atom_feed_has_required_metadata(
     empty_atom_feed: ET.Element,
 ) -> None:
-    assert (
-        empty_atom_feed.findtext(f"{ATOM}title")
-        == "Empty section"
-    )
-    assert (
-        empty_atom_feed.findtext(f"{ATOM}id")
-        == "https://example.org/empty/"
-    )
-    assert (
-        empty_atom_feed.findtext(f"{ATOM}updated")
-        == "2026-01-07T09:00:00Z"
-    )
+    assert empty_atom_feed.findtext(f"{ATOM}title") == "Empty section"
+    assert empty_atom_feed.findtext(f"{ATOM}id") == "https://example.org/empty/"
+    assert empty_atom_feed.findtext(f"{ATOM}updated") == "2026-01-07T09:00:00Z"
 
 
 def test_empty_atom_feed_contains_no_entries(
     empty_atom_feed: ET.Element,
 ) -> None:
     assert empty_atom_feed.findall(f"{ATOM}entry") == []
+
+
+def test_atom_feed_identifies_hugo_generator(
+    atom_feed: ET.Element,
+) -> None:
+    generators = atom_feed.findall(f"{ATOM}generator")
+
+    assert len(generators) == 1
+
+    generator = generators[0]
+
+    assert generator.text == "Hugo"
+    assert generator.get("uri") == "https://gohugo.io/"
+    version = generator.get("version")
+
+    assert version is not None
+    assert re.fullmatch(r"\d+\.\d+\.\d+", version), (
+        f"Unexpected Hugo version format: {version!r}"
+    )
