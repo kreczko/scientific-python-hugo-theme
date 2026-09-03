@@ -1,7 +1,7 @@
 disableKinds:
   - taxonomy
 theme:
-  - scientific-python-hugo-theme/themes/hugo-atom-feed
+  - scientific-python-hugo-theme/themes/hugo-atom-layout
 params:
   colorScheme: auto # can be auto (browser setting), light, or dark
   images:
